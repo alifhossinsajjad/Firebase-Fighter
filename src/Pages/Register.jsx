@@ -44,7 +44,7 @@ const Register = () => {
                 console.log(error);
                 console.log(error.code);
 
-                if (error.code === 'auth/emial-already-in-use') {
+                if (error.code === 'auth/email-already-in-us') {
                     toast.error('user already axist in database')
                 }
             })
