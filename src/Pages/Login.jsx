@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import MyContainer from '../Component/MyContainer';
 import { Link } from 'react-router';
-import { FaEyeSlash, FaRegEye } from 'react-icons/fa';
-import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth';
+import { FaEyeSlash, FaGithub, FaRegEye } from 'react-icons/fa';
+import { GithubAuthProvider, GoogleAuthProvider, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth';
 import { auth } from '../Firebase/Firebase.config';
 import { toast } from 'react-toastify';
 
 const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider()
 
 const Login = () => {
     const [user, setUser] = useState(null)
     const [showPassowrd, setShowPassword] = useState(false)
 
+    const emailRef = useRef();
 
 
     const handleSignin = (event) => {
@@ -25,13 +27,18 @@ const Login = () => {
 
         signInWithEmailAndPassword(auth, email, password)
             .then((result) => {
+                const user = result.user;
+                if(!user.emailVerified) {
+                    toast.error("Please verify your email before login");
+                    return;
+                }
                 console.log(result.user);
                 setUser(result.user)
                 toast.success('login successfully')
             })
             .catch((error) => {
                 console.log(error);
-                toast.error('your password/email invalid ')
+                // toast.error('your password/email invalid ')
             })
     }
 
@@ -50,6 +57,20 @@ const Login = () => {
     }
 
 
+    const handleGihubSignIn = () => {
+        // GitHub sign-in logic to be implemented
+        signInWithPopup(auth, githubProvider)
+        .then((result) => {
+                console.log(result.user);
+                setUser(result.user)
+                toast.success('login successfully')
+            })
+            .catch((error) => {
+                console.log(error);
+                toast.error('your password/email invalid ')
+            })
+    }
+
     const handleSignOut = () => {
         signOut(auth)
         .then(() => {
@@ -63,6 +84,27 @@ const Login = () => {
     const handleShowPassord = () => {
         setShowPassword(!showPassowrd)
     }
+
+
+
+
+    const handleForgetPassword = () => {
+        const email = emailRef.current.value;
+        if(!email){
+            toast.error('Please provide your email address to reset password')
+            return;
+        }
+        sendPasswordResetEmail(auth, email)
+        .then(()=> {
+            // console.log('password reset');
+            toast.success('Password reset email sent. Please check your email.')
+        })
+        .catch ((error) => {
+            console.log(error);
+        })
+    }
+
+
 
     return (
         <div className="min-h-[calc(100vh-20px)] flex items-center justify-center bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 relative overflow-hidden">
@@ -114,6 +156,7 @@ const Login = () => {
                                 <label className="block text-sm mb-1">Email</label>
                                 <input
                                     type="email"
+                                    ref = {emailRef}
                                     name="email"
                                     placeholder="example@email.com"
                                     className="input input-bordered w-full bg-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -136,6 +179,9 @@ const Login = () => {
                                     {showPassowrd ? <FaRegEye /> : <FaEyeSlash />}
                                 </span>
                             </div>
+                            <button
+                            type='submit'
+                            onClick={handleForgetPassword} className='hover:underline'>Forget Password</button>
 
                             <button  type="submit" className="my-btn">
                                 Login
@@ -159,6 +205,19 @@ const Login = () => {
                                     alt="google"
                                     className="w-5 h-5"
                                 />
+                                Continue with Google
+                            </button>
+                            {/* Github Signin */}
+                            <button onClick={handleGihubSignIn}
+                                type="button"
+                                // onClick={handleGoogleSignin}
+                                className="flex items-center justify-center gap-3 bg-white text-gray-800 px-5 py-2 rounded-lg w-full font-semibold hover:bg-gray-100 transition-colors cursor-pointer"
+                            >
+                                
+                                    <FaGithub size={25}/>
+                                    {/* alt="google"
+                                    className="w-5 h-5" */}
+                            
                                 Continue with Google
                             </button>
 
