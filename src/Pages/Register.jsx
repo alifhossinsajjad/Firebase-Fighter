@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import MyContainer from '../Component/MyContainer';
 import { Link } from 'react-router';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
 import { auth } from '../Firebase/Firebase.config';
 import { toast } from 'react-toastify';
 import { FaEyeSlash, FaRegEye } from 'react-icons/fa';
@@ -13,44 +13,120 @@ const Register = () => {
 
 
 
+    // const handleSignUp = (event) => {
+    //     event.preventDefault();
+
+    //     const name = event.target.name.value;
+    //     const photoURL = event.target.photoURL.value;
+    //     const email = event.target.email.value;
+    //     const password = event.target.password.value;
+
+    //     console.log('i am registerd with', email, password);
+
+
+    //     const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    //     if (!passwordPattern.test(password)) {
+
+    //         toast.error("Password must be at least 8 characters long and contain uppercase, lowercase, and number");
+    //         return;
+    //     }
+
+    //     if (!name || !photoURL) {
+    //         toast.error("Please provide name and photo URL");
+    //         return;
+    //     }
+
+    //     event.target.reset();
+
+
+    //     createUserWithEmailAndPassword(auth, email, password)
+    //         .then((result) => {
+    //             const user = result.user;
+
+    //          updateProfile(user, {
+    //                 displayName: name,
+    //                 photoURL: photoURL
+    //             })
+
+    //                 .then(() => {
+    //                  sendEmailVerification(user)
+    //                 })
+
+    //         })
+
+    //         .then(() => {
+    //             toast.success('verification email sent please')
+    //         })
+
+    //         .catch(() => {
+    //             toast.error('verification email not sent')
+    //         })
+
+    //         .catch((error) => {
+    //             console.log(error);
+    //             console.log(error.code);
+    //             if (error.code === 'auth/email-already-in-us') {
+    //                 toast.error('user already axist in database')
+    //             }
+    //         })
+
+    // }
+
+
     const handleSignUp = (event) => {
         event.preventDefault();
 
+        const name = event.target.name.value;
+        const photoURL = event.target.photoURL.value;
         const email = event.target.email.value;
         const password = event.target.password.value;
 
-        console.log('i am registerd with', email, password);
+        console.log("I am registered with", email, password);
 
-
-        const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        const passwordPattern =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
         if (!passwordPattern.test(password)) {
+            toast.error(
+                "Password must be at least 8 characters long and contain uppercase, lowercase, and a number"
+            );
+            return;
+        }
 
-            toast.error("Password must be at least 8 characters long and contain uppercase, lowercase, and number");
+        if (!name || !photoURL) {
+            toast.error("Please provide name and photo URL");
             return;
         }
 
         event.target.reset();
 
-
         createUserWithEmailAndPassword(auth, email, password)
             .then((result) => {
-                console.log(result.user);
-                toast.success('Your account creare successfully')
-
+                const user = result.user;
+                return updateProfile(user, {
+                    displayName: name,
+                    photoURL: photoURL,
+                }).then(() => user);
             })
-
+            .then((user) => {
+                console.log(user);
+                return sendEmailVerification(user).then(()=>{
+                    console.log('send emial');
+                })
+            })
+            .then(() => {
+                toast.success("Verification email sent! Please check your inbox.");
+            })
             .catch((error) => {
-                console.log(error);
-                console.log(error.code);
-
-                if (error.code === 'auth/email-already-in-us') {
-                    toast.error('user already axist in database')
+                console.error("Error:", error);
+                if (error.code === "auth/email-already-in-use") {
+                    toast.error("User already exists in the database.");
+                } else {
+                    toast.error(error.message || "Something went wrong.");
                 }
-            })
-
-    }
-
+            });
+    };
 
 
     const handleShowPassord = () => {
@@ -85,6 +161,24 @@ const Register = () => {
                             Sign Up
                         </h2>
                         <form onSubmit={handleSignUp}>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">User Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    placeholder="Enter your name"
+                                    className="input input-bordered w-full bg-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Photo Url</label>
+                                <input
+                                    type="text"
+                                    name="photoURL"
+                                    placeholder="Enter your photo URL"
+                                    className="input input-bordered w-full bg-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                                />
+                            </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Email</label>
                                 <input
